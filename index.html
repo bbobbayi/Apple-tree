@@ -1,168 +1,59 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🍎 사과나무</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-body{background:linear-gradient(180deg,#fff7e6,#ffe9d6);min-height:100vh;padding:16px;color:#4a2c12}
-.app{max-width:480px;margin:0 auto}
-header{text-align:center;background:#fff;border-radius:24px;padding:20px 16px;box-shadow:0 6px 18px rgba(0,0,0,.08);margin-bottom:16px}
-h1{font-size:26px}.tree{font-size:52px;margin:8px 0}
-.apples{font-size:20px;font-weight:800;color:#d1495b}
-.streak{margin-top:6px;font-weight:700;color:#7a5230}
-.card{background:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.07)}
-h2{font-size:19px;margin-bottom:12px}
-.task{display:flex;align-items:center;gap:12px;background:#fff6ec;border-radius:14px;padding:14px;margin-bottom:10px;font-size:17px;font-weight:700;cursor:pointer;user-select:none}
-.task.checked{background:#e8f7ee;color:#237a4b}
-.task.pending{background:#fff3cd;color:#8a6d00}
-.check{width:28px;height:28px;border-radius:8px;background:#fff;border:3px solid #ffd8a8;display:flex;align-items:center;justify-content:center;font-size:18px}
-.task.checked .check{background:#2b9348;border-color:#2b9348;color:#fff}
-.task.pending .check{background:#ffd54f;border-color:#f4a900;color:#fff}
-button{border:none;border-radius:14px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer}
-.primary{background:#e63946;color:#fff;width:100%;padding:16px;font-size:18px}
-.small{background:#ffe0b2;color:#6d4c00;padding:8px 12px;font-size:14px}
-.approve{background:#2b9348;color:#fff;padding:8px 12px;font-size:14px}
-.cancel{background:#fff;border:2px solid #f4a900;color:#8a6d00;padding:8px 12px;font-size:14px}
-.edit{background:#dbeafe;color:#1d4ed8;padding:8px 12px;font-size:14px}
-.danger{background:#ffd6d6;color:#a4161a;padding:8px 12px;font-size:14px}
-input{width:100%;padding:12px;margin-bottom:10px;border:2px solid #ffd8a8;border-radius:12px;font-size:16px}
-.reward{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff3cd;border-radius:14px;padding:12px;margin-bottom:10px}
-.badge{display:inline-flex;align-items:center;gap:6px;background:#ffe3ec;color:#c9184a;border-radius:999px;padding:6px 10px;font-size:13px;font-weight:800;margin:0 6px 6px 0}
-.badge.done{background:#e8f7ee;color:#237a4b}
-.hidden{display:none}
-.msg{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2b9348;color:#fff;padding:14px 20px;border-radius:999px;font-weight:800;display:none;z-index:99;box-shadow:0 8px 20px rgba(0,0,0,.2)}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1;padding:12px;border-radius:14px;background:#fff;font-weight:800;color:#8a5a2b;text-align:center;cursor:pointer}
-.tab.active{background:#e63946;color:#fff}
-.history{font-size:15px;line-height:1.7}
-.muted{color:#9a7b5f;font-size:14px;margin-top:8px}
-.pill{font-size:12px;font-weight:800;background:#f4a900;color:#fff;border-radius:999px;padding:3px 8px;margin-left:auto}
-.pill.green{background:#2b9348}
-.editBox{background:#fff8e7;border-radius:14px;padding:12px;margin-bottom:10px}
-.editBox input{margin-bottom:8px}
-</style>
-</head>
-<body>
-<div class="app">
-<header><div class="tree">🌳</div><h1>사과나무</h1><div class="apples" id="appleCount">🍎 사과 0개</div><div class="streak" id="streakText">연속 성공 0일</div></header>
-<div class="tabs"><div class="tab active" id="tabKid">아이 화면</div><div class="tab" id="tabParent">부모 승인</div></div>
-<section id="kidScreen">
-<div class="card"><h2>오늘 할 일</h2><div id="taskList"></div><p class="muted">할 일을 누르면 승인 요청, 다시 누르면 취소할 수 있어요. 승인된 항목도 길게 누르거나 다시 눌러 취소 요청할 수 있어요.</p></div>
-<div class="card"><h2>내 배지</h2><div id="badgeList"></div></div>
-<div class="card"><h2>사과로 바꾸기</h2><div id="rewardList"></div></div>
-</section>
-<section id="parentScreen" class="hidden">
-<div class="card" id="loginCard"><h2>부모 로그인</h2><input type="password" id="pinInput" placeholder="비밀번호를 입력하세요"><button class="primary" id="loginBtn">들어가기</button></div>
-<div id="parentMenu" class="hidden">
-<div class="card"><h2>승인 대기</h2><div id="pendingList"></div></div>
-<div class="card"><h2>취소 요청</h2><div id="cancelRequestList"></div></div>
-<div class="card"><h2>오늘 승인된 할 일</h2><div id="approvedList"></div></div>
-<div class="card"><h2>할 일 추가</h2><input type="text" id="newTask" placeholder="예: 양치하기"><button class="primary" id="addTaskBtn">할 일 추가</button><div id="taskManage" style="margin-top:12px"></div></div>
-<div class="card"><h2>보상 추가</h2><input type="text" id="newReward" placeholder="예: 아이스크림 먹기"><input type="number" id="rewardCost" min="1" value="3" placeholder="필요한 사과 개수"><button class="primary" id="addRewardBtn">보상 추가</button><div id="rewardManage" style="margin-top:12px"></div></div>
-<div class="card"><h2>기록</h2><div class="history" id="history"></div><div style="margin-top:12px"><button class="danger" id="resetAllBtn">전체 초기화</button></div></div>
-<div class="card"><h2>비밀번호 변경</h2><input type="password" id="newPin" placeholder="새 비밀번호"><button class="primary" id="changePinBtn">변경하기</button></div>
-</div>
-</section>
-</div>
-<div class="msg" id="msg"></div>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>사과나무 🍎</title><style>
+*{box-sizing:border-box}body{margin:0;background:#fff4e5;color:#433226;font-family:system-ui,'Malgun Gothic',sans-serif}.wrap{max-width:520px;margin:auto;padding:16px}header,.card{background:white;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #0001}header{text-align:center}h1{margin:4px}h2{font-size:19px;margin:0 0 12px}p{line-height:1.5}nav{display:flex;gap:8px;margin-bottom:14px}button{font:inherit;border:0;border-radius:12px;padding:10px 13px;background:#f5dfc0;color:#483521;cursor:pointer}button:disabled{opacity:.5;cursor:default}.tab{flex:1}.selected,.main{background:#e74852;color:white}.main{width:100%;font-weight:700}.ok{background:#2d9754;color:white}.danger{background:#ffdddd;color:#9a2020}.entry{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;margin:8px 0;background:#fff4e5;border-radius:12px;overflow-wrap:anywhere}.entry>span{flex:1}.wait{background:#fff0bd}.approved{background:#e2f5e7}input{width:100%;font:inherit;padding:12px;margin-bottom:8px;border:1px solid #e5c799;border-radius:10px}.buttons{display:flex;gap:6px;flex-wrap:wrap}.buttons button{font-size:14px;padding:8px}.muted{color:#806b58;font-size:14px}.hidden{display:none!important}.badge{display:inline-block;background:#e5f6eb;border-radius:20px;padding:7px 10px;margin:3px;font-size:14px}.notice{background:#fff0bd;padding:12px;border-radius:12px;margin-bottom:14px}.close{background:#4a4a4a;color:white;width:100%;font-weight:700}
+</style></head><body><div class="wrap"><header><div style="font-size:50px">🌳</div><h1>사과나무</h1><div id="counter"></div></header>
+<div id="storageWarning" class="notice hidden"></div><nav><button id="kidTab" class="tab selected">아이 화면</button><button id="parentTab" class="tab">부모 승인</button></nav>
+<section id="kid"><div class="card"><h2>오늘 할 일</h2><div id="kidTasks"></div><p class="muted">할 일을 누르면 승인 요청, 다시 누르면 요청 취소. 승인된 체크는 취소 요청을 보낼 수 있어요.</p></div><div class="card"><h2>내 배지</h2><div id="badges"></div></div><div class="card"><h2>사과로 바꾸기</h2><div id="kidRewards"></div></div></section>
+<section id="parent" class="hidden"><div id="login" class="card"><h2>부모 비밀번호</h2><input id="pin" type="password" inputmode="numeric" placeholder="처음 비밀번호 1234"><button id="loginBtn" class="main">로그인</button></div><div id="parentContent" class="hidden"><div class="card"><button id="logoutBtn" class="close">🔒 부모 화면 닫기</button><p class="muted">닫으면 아이가 설정을 바꿀 수 없어요. 아이 화면으로 이동하거나 화면을 닫아도 자동으로 잠겨요.</p></div><div class="card"><h2>오늘 승인 대기 <span id="pendingCount"></span></h2><div id="pending"></div></div><div class="card"><h2>오늘 취소 요청</h2><div id="cancels"></div></div><div class="card"><h2>오늘 승인된 할 일</h2><div id="approved"></div></div><div class="card"><h2>할 일 관리</h2><input id="newTask" placeholder="새 할 일"><button id="addTask" class="main">할 일 추가</button><div id="manageTasks"></div></div><div class="card"><h2>보상 관리</h2><input id="newReward" placeholder="새 보상"><input id="newCost" type="number" min="1" value="3" placeholder="필요한 사과"><button id="addReward" class="main">보상 추가</button><div id="manageRewards"></div></div><div class="card"><h2>성공 기록</h2><div id="history"></div></div><div class="card"><h2>설정</h2><input id="newPin" type="password" placeholder="새 비밀번호 (4자리 이상)"><button id="changePin">비밀번호 변경</button><button id="reset" class="danger">모든 데이터 초기화</button></div></div></section></div>
 <script>
-const KEY="appleTreeAppV7";
-const todayKey=()=>new Date().toISOString().slice(0,10);
-let data=JSON.parse(localStorage.getItem(KEY)||"null")||{tasks:["양치하기","숙제하기","장난감 정리"],rewards:[{name:"아이스크림 먹기",cost:3},{name:"공원 놀러가기",cost:5}],badges:[],pending:{},approved:{},cancelRequests:{},records:{},apples:0,streak:0,lastSuccessDate:null,pin:"1234"};
-function save(){localStorage.setItem(KEY,JSON.stringify(data))}
-function toast(t){const m=document.getElementById("msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",2200)}
-function renderKid(){
-document.getElementById("appleCount").textContent=`🍎 사과 ${data.apples}개`;
-document.getElementById("streakText").textContent=`연속 성공 ${data.streak}일`;
-const t=todayKey(),pending=data.pending[t]||[],approved=data.approved[t]||[],cancels=data.cancelRequests[t]||[];
-const list=document.getElementById("taskList");list.innerHTML="";
-data.tasks.forEach((task,i)=>{
-let cls="task",mark="";
-if(approved.includes(i)){cls+=" checked";mark="✓"}
-else if(pending.includes(i)){cls+=" pending";mark="⏳"}
-const div=document.createElement("div");div.className=cls;
-div.innerHTML=`<div class="check">${mark}</div><span>${task}</span>`;
-if(cancels.includes(i)){const b=document.createElement("span");b.className="pill";b.textContent="취소 요청 중";div.appendChild(b)}
-else if(approved.includes(i)){const b=document.createElement("span");b.className="pill green";b.textContent="승인됨 · 눌러서 취소 요청";div.appendChild(b);div.onclick=()=>requestCancel(i)}
-else if(pending.includes(i)){const b=document.createElement("span");b.className="pill";b.textContent="승인 대기 · 눌러서 취소";div.appendChild(b);div.onclick=()=>cancelRequest(i)}
-else{div.onclick=()=>requestCheck(i)}
-list.appendChild(div);
-});
-const badges=document.getElementById("badgeList");badges.innerHTML="";
-if(!data.badges.length){badges.innerHTML="<p class='muted'>아직 배지가 없어요. 사과로 보상을 교환하면 배지가 생겨요!</p>"}
-data.badges.forEach(b=>{const s=document.createElement("span");s.className="badge done";s.textContent=`🏅 ${b.name} · ${b.date}`;badges.appendChild(s)});
-const rewards=document.getElementById("rewardList");rewards.innerHTML="";
-data.rewards.forEach((r,i)=>{const div=document.createElement("div");div.className="reward";div.innerHTML=`<span>🎁 ${r.name}<br><small>🍎 ${r.cost}개 필요</small></span>`;const b=document.createElement("button");b.className="small";b.textContent="교환";b.disabled=data.apples<r.cost;b.onclick=()=>exchangeReward(i);div.appendChild(b);rewards.appendChild(div)});
+'use strict';
+const KEY='appleTreeAppV6';
+const DEFAULT={tasks:[{id:'t1',name:'양치하기'},{id:'t2',name:'숙제하기'},{id:'t3',name:'장난감 정리'}],rewards:[{id:'r1',name:'아이스크림 먹기',cost:3},{id:'r2',name:'공원 놀러가기',cost:5}],days:{},badges:[],pin:'1234'};
+const $=id=>document.getElementById(id);
+const localDay=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const previousDay=key=>{let [y,m,d]=key.split('-').map(Number);return localDay(new Date(y,m-1,d-1))};
+let storageOK=true, loggedIn=false, tab='kid';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){storageOK=false;return null}}
+function normalize(x){if(!x||typeof x!=='object')return structuredClone(DEFAULT);
+let tasks=(Array.isArray(x.tasks)?x.tasks:DEFAULT.tasks).map((t,i)=>typeof t==='string'?{id:'legacy-'+i,name:t}:t).filter(t=>t&&t.id&&typeof t.name==='string');
+let rewards=(Array.isArray(x.rewards)?x.rewards:DEFAULT.rewards).map((r,i)=>({...r,id:r.id||'legacy-r-'+i}));
+let days=x.days&&typeof x.days==='object'?x.days:{};
+if(!x.days){const dates=new Set([...Object.keys(x.pending||{}),...Object.keys(x.approved||{}),...Object.keys(x.cancelRequests||{}),...Object.keys(x.records||{})]);for(const date of dates){const ids=a=>(Array.isArray(a)?a:[]).map(n=>tasks[n]?.id).filter(Boolean);days[date]={pending:ids(x.pending?.[date]),approved:ids(x.approved?.[date]),cancels:ids(x.cancelRequests?.[date]),complete:!!x.records?.[date]}}}
+return {tasks,rewards,days,badges:Array.isArray(x.badges)?x.badges:[],pin:String(x.pin||'1234'),legacyApples:Number(x.legacyApples??x.apples??0),legacyStreak:Number(x.legacyStreak??x.streak??0),legacyLast:x.legacyLast??x.lastSuccessDate??null};}
+let data=normalize(read());
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;return true}catch(e){storageOK=false;$('storageWarning').textContent='이 브라우저에서 저장이 차단됐어요. 크롬이나 삼성 인터넷의 일반 탭으로 열어주세요.';$('storageWarning').classList.remove('hidden');return false}}
+function day(key=localDay()){return data.days[key]||(data.days[key]={pending:[],approved:[],cancels:[],complete:false})}
+function freshId(){return String(Date.now())+'-'+Math.random().toString(36).slice(2)}
+function status(){const today=localDay();let streak=0,date=today;if(!data.days[date]?.complete)date=previousDay(date);while(data.days[date]?.complete){streak++;date=previousDay(date)}let earned=Object.values(data.days).filter(v=>v.complete).reduce((n,v)=>n+((v.rewarded)?1:0),0);let used=data.badges.reduce((n,b)=>n+Number(b.cost||0),0);return {streak,apples:Math.max(0,earned+Number(data.legacyApples||0)-used)} }
+function checkDay(key=localDay()){let d=day(key);let complete=data.tasks.length>0&&data.tasks.every(t=>d.approved.includes(t.id));if(complete&&!d.complete){d.complete=true;const count=(()=>{let c=1,k=previousDay(key);while(data.days[k]?.complete){c++;k=previousDay(k)}return c})();d.rewarded=count%3===0;if(d.rewarded)alert('🎉 3일 연속 성공! 사과 1개 획득!');else alert('오늘 할 일 모두 승인 완료!')}else if(!complete&&d.complete){d.complete=false;d.rewarded=false} }
+function el(tag,text,cls){let n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
+function row(text,cls=''){let n=el('div',undefined,'entry '+cls);n.append(el('span',text));return n}
+function btn(text,fn,cls=''){let b=el('button',text,cls);b.type='button';b.onclick=fn;return b}
+function empty(node,text){node.append(el('p',text,'muted'))}
+function render(){let k=localDay(),d=day(k),s=status();$('counter').textContent=`🍎 사과 ${s.apples}개 · 연속 성공 ${s.streak}일`;
+let kt=$('kidTasks');kt.replaceChildren();if(!data.tasks.length)empty(kt,'부모 화면에서 할 일을 추가해 주세요.');
+for(const t of data.tasks){let a=d.approved.includes(t.id),p=d.pending.includes(t.id),c=d.cancels.includes(t.id);let n=row(`${a?'✅':p?'⏳':'⬜'} ${t.name}`,a?'approved':p?'wait':'');if(c)n.append(el('span','취소 요청 중','muted'));else if(a)n.append(btn('취소 요청',()=>{if(confirm('승인된 체크의 취소를 부모님에게 요청할까요?')){d.cancels.push(t.id);save();render()}},'danger'));else if(p)n.append(btn('요청 취소',()=>{d.pending=d.pending.filter(id=>id!==t.id);save();render()},'danger'));else n.append(btn('했어요',()=>{d.pending.push(t.id);save();render()},'ok'));kt.append(n)}
+let badge=$('badges');badge.replaceChildren();if(!data.badges.length)empty(badge,'아직 배지가 없어요.');for(const b of data.badges)badge.append(el('span',`🏅 ${b.name} · ${b.date}`,'badge'));
+let kr=$('kidRewards');kr.replaceChildren();for(const r of data.rewards){let n=row(`${r.name} · 🍎 ${r.cost}개`);let b=btn('교환',()=>{if(!confirm(`${r.name}에 사과 ${r.cost}개를 사용할까요?`))return;if(status().apples<r.cost)return alert('사과가 부족해요.');data.badges.unshift({name:r.name,cost:r.cost,date:k});save();render()},'ok');b.disabled=s.apples<r.cost;n.append(b);kr.append(n)}
+$('kid').classList.toggle('hidden',tab!=='kid');$('parent').classList.toggle('hidden',tab!=='parent');$('kidTab').classList.toggle('selected',tab==='kid');$('parentTab').classList.toggle('selected',tab==='parent');$('login').classList.toggle('hidden',loggedIn);$('parentContent').classList.toggle('hidden',!loggedIn);
+if(loggedIn)renderParent(d,k);
 }
-function requestCheck(i){const t=todayKey();data.pending[t]=data.pending[t]||[];if(data.pending[t].includes(i))return;data.pending[t].push(i);save();renderKid();toast("부모님 승인을 기다리고 있어요.")}
-function cancelRequest(i){const t=todayKey();data.pending[t]=(data.pending[t]||[]).filter(x=>x!==i);save();renderKid();toast("승인 요청을 취소했어요.")}
-function requestCancel(i){
-const t=todayKey();data.cancelRequests[t]=data.cancelRequests[t]||[];
-if(data.cancelRequests[t].includes(i))return;
-if(!confirm("이 할 일의 승인을 취소 요청할까요?"))return;
-data.cancelRequests[t].push(i);save();renderKid();toast("부모님에게 취소 요청을 보냈어요.");
+function renderParent(d,k){let p=$('pending');p.replaceChildren();$('pendingCount').textContent=`(${d.pending.length})`;if(!d.pending.length)empty(p,'승인 대기 없음');for(const id of d.pending){let t=data.tasks.find(x=>x.id===id);if(!t)continue;let n=row(t.name,'wait');n.append(btn('승인',()=>{d.pending=d.pending.filter(x=>x!==id);if(!d.approved.includes(id))d.approved.push(id);checkDay(k);save();render()},'ok'),btn('거절',()=>{d.pending=d.pending.filter(x=>x!==id);save();render()},'danger'));p.append(n)}
+let c=$('cancels');c.replaceChildren();if(!d.cancels.length)empty(c,'취소 요청 없음');for(const id of d.cancels){let t=data.tasks.find(x=>x.id===id);if(!t)continue;let n=row(t.name,'wait');n.append(btn('취소 승인',()=>unapprove(id), 'ok'),btn('거절',()=>{d.cancels=d.cancels.filter(x=>x!==id);save();render()},'danger'));c.append(n)}
+let a=$('approved');a.replaceChildren();if(!d.approved.length)empty(a,'승인된 할 일 없음');for(const id of d.approved){let t=data.tasks.find(x=>x.id===id);if(!t)continue;let n=row(t.name,'approved');n.append(btn('승인 취소',()=>unapprove(id),'danger'));a.append(n)}
+let tm=$('manageTasks');tm.replaceChildren();for(const t of data.tasks){let n=row(t.name);n.append(btn('수정',()=>{let v=prompt('할 일 이름',t.name);if(v?.trim()){t.name=v.trim();save();render()}}),btn('삭제',()=>{if(!confirm('이 할 일을 삭제할까요?'))return;data.tasks=data.tasks.filter(x=>x.id!==t.id);for(const v of Object.values(data.days)){v.pending=v.pending.filter(x=>x!==t.id);v.approved=v.approved.filter(x=>x!==t.id);v.cancels=v.cancels.filter(x=>x!==t.id)}checkDay();save();render()},'danger'));tm.append(n)}
+let rm=$('manageRewards');rm.replaceChildren();for(const r of data.rewards){let n=row(`${r.name} · 🍎 ${r.cost}개`);n.append(btn('수정',()=>{let v=prompt('보상 이름',r.name);if(v===null)return;let cost=prompt('필요한 사과 개수',r.cost);if(cost===null)return;if(!v.trim()||!Number.isInteger(Number(cost))||Number(cost)<1)return alert('이름과 1 이상의 정수를 입력해 주세요.');r.name=v.trim();r.cost=Number(cost);save();render()}),btn('삭제',()=>{if(!confirm('이 보상을 삭제할까요?'))return;data.rewards=data.rewards.filter(x=>x.id!==r.id);save();render()},'danger'));rm.append(n)}
+let h=$('history');h.replaceChildren();let dates=Object.keys(data.days).filter(k=>data.days[k].complete).sort().reverse().slice(0,10);if(!dates.length)empty(h,'아직 성공 기록이 없어요.');for(const date of dates)h.append(el('div','✅ '+date));
 }
-function approveTask(i){
-const t=todayKey();data.pending[t]=(data.pending[t]||[]).filter(x=>x!==i);
-data.approved[t]=data.approved[t]||[];
-if(!data.approved[t].includes(i))data.approved[t].push(i);
-if(data.approved[t].length===data.tasks.length&&data.tasks.length>0&&!data.records[t]){
-data.records[t]=true;
-const y=new Date();y.setDate(y.getDate()-1);const yKey=y.toISOString().slice(0,10);
-data.streak=data.lastSuccessDate===yKey?data.streak+1:1;data.lastSuccessDate=t;
-if(data.streak%3===0){data.apples+=1;save();renderKid();renderParent();toast("🎉 3일 연속 성공! 사과 1개 획득!");return}
-save();renderKid();renderParent();toast(`오늘 성공! 연속 ${data.streak}일!`);return
-}
-save();renderKid();renderParent();
-}
-function approveCancel(i){
-const t=todayKey();
-data.cancelRequests[t]=(data.cancelRequests[t]||[]).filter(x=>x!==i);
-data.approved[t]=(data.approved[t]||[]).filter(x=>x!==i);
-if(data.records[t]){
-delete data.records[t];
-if(data.streak>0){data.streak-=1;if(data.streak%3===2&&data.apples>0){data.apples-=1;toast("취소 승인: 사과 1개를 회수했어요.")}else toast("취소를 승인했어요.")}
-if(data.lastSuccessDate===t)data.lastSuccessDate=null;
-}
-save();renderKid();renderParent();
-}
-function rejectCancel(i){const t=todayKey();data.cancelRequests[t]=(data.cancelRequests[t]||[]).filter(x=>x!==i);save();renderKid();renderParent();toast("취소 요청을 거절했어요.")}
-function unapproveTask(i){
-const t=todayKey();data.approved[t]=(data.approved[t]||[]).filter(x=>x!==i);
-if(data.records[t]){delete data.records[t];if(data.streak>0){data.streak-=1;if(data.streak%3===2&&data.apples>0)data.apples-=1}if(data.lastSuccessDate===t)data.lastSuccessDate=null}
-save();renderKid();renderParent();toast("승인을 취소했어요.");
-}
-function exchangeReward(i){const r=data.rewards[i];if(data.apples<r.cost)return;data.apples-=r.cost;data.badges.unshift({name:r.name,date:new Date().toLocaleDateString("ko-KR")});save();renderKid();toast(`🏅 ${r.name} 배지 획득!`)}
-function renderParent(){
-const t=todayKey(),pending=data.pending[t]||[],approved=data.approved[t]||[],cancels=data.cancelRequests[t]||[];
-const pl=document.getElementById("pendingList");pl.innerHTML="";
-if(!pending.length){pl.innerHTML="<p class='muted'>승인 대기 중인 할 일이 없어요.</p>"}
-pending.forEach(i=>{const div=document.createElement("div");div.className="task pending";div.innerHTML=`<span>${data.tasks[i]}</span>`;const ok=document.createElement("button");ok.className="approve";ok.textContent="승인";ok.onclick=()=>approveTask(i);const no=document.createElement("button");no.className="cancel";no.textContent="취소";no.onclick=()=>rejectTask(i);div.appendChild(ok);div.appendChild(no);pl.appendChild(div)});
-const cl=document.getElementById("cancelRequestList");cl.innerHTML="";
-if(!cancels.length){cl.innerHTML="<p class='muted'>취소 요청이 없어요.</p>"}
-cancels.forEach(i=>{const div=document.createElement("div");div.className="task pending";div.innerHTML=`<span>${data.tasks[i]}</span>`;const ok=document.createElement("button");ok.className="approve";ok.textContent="취소 승인";ok.onclick=()=>approveCancel(i);const no=document.createElement("button");no.className="cancel";no.textContent="거절";no.onclick=()=>rejectCancel(i);div.appendChild(ok);div.appendChild(no);cl.appendChild(div)});
-const al=document.getElementById("approvedList");al.innerHTML="";
-if(!approved.length){al.innerHTML="<p class='muted'>오늘 승인된 할 일이 없어요.</p>"}
-approved.forEach(i=>{const div=document.createElement("div");div.className="task checked";div.innerHTML=`<span>✅ ${data.tasks[i]}</span>`;const no=document.createElement("button");no.className="cancel";no.textContent="승인 취소";no.onclick=()=>unapproveTask(i);div.appendChild(no);al.appendChild(div)});
-const tm=document.getElementById("taskManage");tm.innerHTML="";
-data.tasks.forEach((task,i)=>{const div=document.createElement("div");div.className="task";div.innerHTML=`<span>${task}</span>`;const e=document.createElement("button");e.className="edit";e.textContent="수정";e.onclick=()=>editTask(i);const d=document.createElement("button");d.className="danger";d.textContent="삭제";d.onclick=()=>{if(confirm("이 할 일을 삭제할까요?")){data.tasks.splice(i,1);save();renderParent();renderKid()}};div.appendChild(e);div.appendChild(d);tm.appendChild(div)});
-const rm=document.getElementById("rewardManage");rm.innerHTML="";
-data.rewards.forEach((r,i)=>{const box=document.createElement("div");box.className="editBox";box.innerHTML=`<input type="text" value="${r.name}" id="rn${i}"><input type="number" min="1" value="${r.cost}" id="rc${i}">`;const row=document.createElement("div");row.style.display="flex";row.style.gap="8px";const sb=document.createElement("button");sb.className="approve";sb.textContent="저장";sb.onclick=()=>{const n=document.getElementById(`rn${i}`).value.trim();const c=Number(document.getElementById(`rc${i}`).value);if(!n||c<1)return toast("보상 이름과 사과 개수를 확인하세요.");data.rewards[i]={name:n,cost:c};save();renderParent();renderKid();toast("보상을 수정했어요.")};const d=document.createElement("button");d.className="danger";d.textContent="삭제";d.onclick=()=>{if(confirm("이 보상을 삭제할까요?")){data.rewards.splice(i,1);save();renderParent();renderKid()}};row.appendChild(sb);row.appendChild(d);box.appendChild(row);rm.appendChild(box)});
-const dates=Object.keys(data.records).sort().reverse().slice(0,10);
-document.getElementById("history").innerHTML=dates.length?dates.map(d=>`✅ ${d} 완료`).join("<br>"):"아직 완료 기록이 없어요.";
-}
-function rejectTask(i){const t=todayKey();data.pending[t]=(data.pending[t]||[]).filter(x=>x!==i);save();renderKid();renderParent();toast("승인 대기를 취소했어요.")}
-function editTask(i){const v=prompt("할 일 이름을 수정하세요",data.tasks[i]);if(v===null)return;const n=v.trim();if(!n)return;data.tasks[i]=n;save();renderParent();renderKid();toast("할 일을 수정했어요.")}
-document.getElementById("addTaskBtn").onclick=()=>{const v=document.getElementById("newTask").value.trim();if(!v)return;data.tasks.push(v);document.getElementById("newTask").value="";save();renderParent();renderKid();toast("할 일이 추가되었어요.")};
-document.getElementById("addRewardBtn").onclick=()=>{const n=document.getElementById("newReward").value.trim();const c=Number(document.getElementById("rewardCost").value);if(!n||c<1)return;data.rewards.push({name:n,cost:c});document.getElementById("newReward").value="";save();renderParent();renderKid();toast("보상이 추가되었어요.")};
-document.getElementById("resetAllBtn").onclick=()=>{if(!confirm("정말 모든 기록을 삭제할까요?"))return;localStorage.removeItem(KEY);location.reload()};
-document.getElementById("changePinBtn").onclick=()=>{const p=document.getElementById("newPin").value.trim();if(p.length<4)return toast("비밀번호는 4자리 이상으로 하세요.");data.pin=p;save();document.getElementById("newPin").value="";toast("비밀번호를 변경했어요.")};
-document.getElementById("loginBtn").onclick=()=>{if(document.getElementById("pinInput").value===data.pin){document.getElementById("loginCard").classList.add("hidden");document.getElementById("parentMenu").classList.remove("hidden");renderParent()}else toast("비밀번호가 틀렸어요.")};
-document.getElementById("tabKid").onclick=()=>{document.getElementById("tabKid").classList.add("active");document.getElementById("tabParent").classList.remove("active");document.getElementById("kidScreen").classList.remove("hidden");document.getElementById("parentScreen").classList.add("hidden");renderKid()};
-document.getElementById("tabParent").onclick=()=>{document.getElementById("tabParent").classList.add("active");document.getElementById("tabKid").classList.remove("active");document.getElementById("parentScreen").classList.remove("hidden");document.getElementById("kidScreen").classList.add("hidden")};
-renderKid();
-</script>
-</body>
-</html>
+function unapprove(id){let d=day();d.approved=d.approved.filter(x=>x!==id);d.cancels=d.cancels.filter(x=>x!==id);checkDay();save();render()}
+function lockParent(){loggedIn=false;if(tab==='parent')tab='kid';render()}
+$('kidTab').onclick=()=>{tab='kid';loggedIn=false;render()};$('parentTab').onclick=()=>{tab='parent';render()};$('loginBtn').onclick=()=>{if($('pin').value!==data.pin)return alert('비밀번호가 달라요.');loggedIn=true;$('pin').value='';render()};$('logoutBtn').onclick=lockParent;
+$('addTask').onclick=()=>{let v=$('newTask').value.trim();if(!v)return;data.tasks.push({id:freshId(),name:v});$('newTask').value='';save();render()};
+$('addReward').onclick=()=>{let v=$('newReward').value.trim(),cost=Number($('newCost').value);if(!v||!Number.isInteger(cost)||cost<1)return alert('보상 이름과 1 이상의 사과 개수를 입력해 주세요.');data.rewards.push({id:freshId(),name:v,cost});$('newReward').value='';save();render()};
+$('changePin').onclick=()=>{let v=$('newPin').value.trim();if(v.length<4)return alert('4자리 이상 입력해 주세요.');data.pin=v;$('newPin').value='';save();alert('비밀번호를 변경했어요.')};
+$('reset').onclick=()=>{if(!confirm('모든 할 일, 기록, 배지와 사과를 삭제할까요?'))return;data=structuredClone(DEFAULT);save();render()};
+window.addEventListener('storage',e=>{if(e.key===KEY){data=normalize(read());render()}});
+window.addEventListener('beforeunload',()=>{loggedIn=false});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)loggedIn=false});
+render();
+</script></body></html>
