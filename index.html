@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍎 사과나무</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+body{background:linear-gradient(180deg,#fff7e6,#ffe9d6);min-height:100vh;padding:16px;color:#4a2c12}
+.app{max-width:480px;margin:0 auto}
+header{text-align:center;background:#fff;border-radius:24px;padding:20px 16px;box-shadow:0 6px 18px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:26px}.tree{font-size:52px;margin:8px 0}
+.apples{font-size:20px;font-weight:800;color:#d1495b}
+.streak{margin-top:6px;font-weight:700;color:#7a5230}
+.card{background:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.07)}
+h2{font-size:19px;margin-bottom:12px}
+.task{display:flex;align-items:center;gap:12px;background:#fff6ec;border-radius:14px;padding:14px;margin-bottom:10px;font-size:17px;font-weight:700;cursor:pointer;user-select:none}
+.task.checked{background:#e8f7ee;color:#237a4b}
+.task.pending{background:#fff3cd;color:#8a6d00}
+.check{width:28px;height:28px;border-radius:8px;background:#fff;border:3px solid #ffd8a8;display:flex;align-items:center;justify-content:center;font-size:18px}
+.task.checked .check{background:#2b9348;border-color:#2b9348;color:#fff}
+.task.pending .check{background:#ffd54f;border-color:#f4a900;color:#fff}
+button{border:none;border-radius:14px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer}
+.primary{background:#e63946;color:#fff;width:100%;padding:16px;font-size:18px}
+.small{background:#ffe0b2;color:#6d4c00;padding:8px 12px;font-size:14px}
+.approve{background:#2b9348;color:#fff;padding:8px 12px;font-size:14px}
+.edit{background:#dbeafe;color:#1d4ed8;padding:8px 12px;font-size:14px}
+.danger{background:#ffd6d6;color:#a4161a;padding:8px 12px;font-size:14px}
+input{width:100%;padding:12px;margin-bottom:10px;border:2px solid #ffd8a8;border-radius:12px;font-size:16px}
+.reward{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff3cd;border-radius:14px;padding:12px;margin-bottom:10px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#ffe3ec;color:#c9184a;border-radius:999px;padding:6px 10px;font-size:13px;font-weight:800;margin:0 6px 6px 0}
+.badge.done{background:#e8f7ee;color:#237a4b}
+.hidden{display:none}
+.msg{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2b9348;color:#fff;padding:14px 20px;border-radius:999px;font-weight:800;display:none;z-index:99;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:12px;border-radius:14px;background:#fff;font-weight:800;color:#8a5a2b;text-align:center;cursor:pointer}
+.tab.active{background:#e63946;color:#fff}
+.history{font-size:15px;line-height:1.7}
+.muted{color:#9a7b5f;font-size:14px;margin-top:8px}
+.pill{font-size:12px;font-weight:800;background:#f4a900;color:#fff;border-radius:999px;padding:3px 8px;margin-left:auto}
+.editBox{background:#fff8e7;border-radius:14px;padding:12px;margin-bottom:10px}
+.editBox input{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="tree">🌳</div><h1>사과나무</h1><div class="apples" id="appleCount">🍎 사과 0개</div><div class="streak" id="streakText">연속 성공 0일</div></header>
+<div class="tabs"><div class="tab active" id="tabKid">아이 화면</div><div class="tab" id="tabParent">부모 승인</div></div>
+<section id="kidScreen">
+<div class="card"><h2>오늘 할 일</h2><div id="taskList"></div><p class="muted">할 일을 누르면 승인 대기가 됩니다. 부모님이 승인해야 체크돼요.</p></div>
+<div class="card"><h2>내 배지</h2><div id="badgeList"></div></div>
+<div class="card"><h2>사과로 바꾸기</h2><div id="rewardList"></div></div>
+</section>
+<section id="parentScreen" class="hidden">
+<div class="card" id="loginCard"><h2>부모 로그인</h2><input type="password" id="pinInput" placeholder="비밀번호를 입력하세요"><button class="primary" id="loginBtn">들어가기</button></div>
+<div id="parentMenu" class="hidden">
+<div class="card"><h2>승인 대기</h2><div id="pendingList"></div></div>
+<div class="card"><h2>할 일 추가</h2><input type="text" id="newTask" placeholder="예: 양치하기"><button class="primary" id="addTaskBtn">할 일 추가</button><div id="taskManage" style="margin-top:12px"></div></div>
+<div class="card"><h2>보상 추가</h2><input type="text" id="newReward" placeholder="예: 아이스크림 먹기"><input type="number" id="rewardCost" min="1" value="3" placeholder="필요한 사과 개수"><button class="primary" id="addRewardBtn">보상 추가</button><div id="rewardManage" style="margin-top:12px"></div></div>
+<div class="card"><h2>기록</h2><div class="history" id="history"></div><div style="margin-top:12px"><button class="danger" id="resetAllBtn">전체 초기화</button></div></div>
+<div class="card"><h2>비밀번호 변경</h2><input type="password" id="newPin" placeholder="새 비밀번호"><button class="primary" id="changePinBtn">변경하기</button></div>
+</div>
+</section>
+</div>
+<div class="msg" id="msg"></div>
+<script>
+const KEY="appleTreeAppV5";
+const todayKey=()=>new Date().toISOString().slice(0,10);
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||{tasks:["양치하기","숙제하기","장난감 정리"],rewards:[{name:"아이스크림 먹기",cost:3},{name:"공원 놀러가기",cost:5}],badges:[],pending:{},approved:{},records:{},apples:0,streak:0,lastSuccessDate:null,pin:"1234"};
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function toast(t){const m=document.getElementById("msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",2200)}
+function renderKid(){
+document.getElementById("appleCount").textContent=`🍎 사과 ${data.apples}개`;
+document.getElementById("streakText").textContent=`연속 성공 ${data.streak}일`;
+const t=todayKey(),pending=data.pending[t]||[],approved=data.approved[t]||[];
+const list=document.getElementById("taskList");list.innerHTML="";
+data.tasks.forEach((task,i)=>{let cls="task",mark="";if(approved.includes(i)){cls+=" checked";mark="✓"}else if(pending.includes(i)){cls+=" pending";mark="⏳"}const div=document.createElement("div");div.className=cls;div.innerHTML=`<div class="check">${mark}</div><span>${task}</span>`;if(pending.includes(i)){const b=document.createElement("span");b.className="pill";b.textContent="승인 대기";div.appendChild(b)}else if(!approved.includes(i)){div.onclick=()=>requestCheck(i)}list.appendChild(div)});
+const badges=document.getElementById("badgeList");badges.innerHTML="";
+if(!data.badges.length){badges.innerHTML="<p class='muted'>아직 배지가 없어요. 사과로 보상을 교환하면 배지가 생겨요!</p>"}
+data.badges.forEach(b=>{const s=document.createElement("span");s.className="badge done";s.textContent=`🏅 ${b.name} · ${b.date}`;badges.appendChild(s)});
+const rewards=document.getElementById("rewardList");rewards.innerHTML="";
+data.rewards.forEach((r,i)=>{const div=document.createElement("div");div.className="reward";div.innerHTML=`<span>🎁 ${r.name}<br><small>🍎 ${r.cost}개 필요</small></span>`;const b=document.createElement("button");b.className="small";b.textContent="교환";b.disabled=data.apples<r.cost;b.onclick=()=>exchangeReward(i);div.appendChild(b);rewards.appendChild(div)});
+}
+function requestCheck(i){const t=todayKey();data.pending[t]=data.pending[t]||[];if(data.pending[t].includes(i))return;data.pending[t].push(i);save();renderKid();toast("부모님 승인을 기다리고 있어요.")}
+function approveTask(i){const t=todayKey();data.pending[t]=(data.pending[t]||[]).filter(x=>x!==i);data.approved[t]=data.approved[t]||[];if(!data.approved[t].includes(i))data.approved[t].push(i);if(data.approved[t].length===data.tasks.length&&data.tasks.length>0&&!data.records[t]){data.records[t]=true;const y=new Date();y.setDate(y.getDate()-1);const yKey=y.toISOString().slice(0,10);data.streak=data.lastSuccessDate===yKey?data.streak+1:1;data.lastSuccessDate=t;if(data.streak%3===0){data.apples+=1;save();renderKid();renderParent();toast("🎉 3일 연속 성공! 사과 1개 획득!");return}save();renderKid();renderParent();toast(`오늘 성공! 연속 ${data.streak}일!`);return}save();renderKid();renderParent()}
+function rejectTask(i){const t=todayKey();data.pending[t]=(data.pending[t]||[]).filter(x=>x!==i);save();renderKid();renderParent();toast("승인 대기를 취소했어요.")}
+function exchangeReward(i){const r=data.rewards[i];if(data.apples<r.cost)return;data.apples-=r.cost;data.badges.unshift({name:r.name,date:new Date().toLocaleDateString("ko-KR")});save();renderKid();toast(`🏅 ${r.name} 배지 획득!`)}
+function renderParent(){
+const t=todayKey(),pending=data.pending[t]||[];
+const pl=document.getElementById("pendingList");pl.innerHTML="";
+if(!pending.length){pl.innerHTML="<p class='muted'>승인 대기 중인 할 일이 없어요.</p>"}
+pending.forEach(i=>{const div=document.createElement("div");div.className="task pending";div.innerHTML=`<span>${data.tasks[i]}</span>`;const ok=document.createElement("button");ok.className="approve";ok.textContent="승인";ok.onclick=()=>approveTask(i);const no=document.createElement("button");no.className="danger";no.textContent="취소";no.onclick=()=>rejectTask(i);div.appendChild(ok);div.appendChild(no);pl.appendChild(div)});
+const tm=document.getElementById("taskManage");tm.innerHTML="";
+data.tasks.forEach((task,i)=>{const div=document.createElement("div");div.className="task";div.innerHTML=`<span>${task}</span>`;const e=document.createElement("button");e.className="edit";e.textContent="수정";e.onclick=()=>editTask(i);const d=document.createElement("button");d.className="danger";d.textContent="삭제";d.onclick=()=>{if(confirm("이 할 일을 삭제할까요?")){data.tasks.splice(i,1);save();renderParent();renderKid()}};div.appendChild(e);div.appendChild(d);tm.appendChild(div)});
+const rm=document.getElementById("rewardManage");rm.innerHTML="";
+data.rewards.forEach((r,i)=>{const box=document.createElement("div");box.className="editBox";box.innerHTML=`<input type="text" value="${r.name}" id="rn${i}"><input type="number" min="1" value="${r.cost}" id="rc${i}">`;const row=document.createElement("div");row.style.display="flex";row.style.gap="8px";const sb=document.createElement("button");sb.className="approve";sb.textContent="저장";sb.onclick=()=>{const n=document.getElementById(`rn${i}`).value.trim();const c=Number(document.getElementById(`rc${i}`).value);if(!n||c<1)return toast("보상 이름과 사과 개수를 확인하세요.");data.rewards[i]={name:n,cost:c};save();renderParent();renderKid();toast("보상을 수정했어요.")};const d=document.createElement("button");d.className="danger";d.textContent="삭제";d.onclick=()=>{if(confirm("이 보상을 삭제할까요?")){data.rewards.splice(i,1);save();renderParent();renderKid()}};row.appendChild(sb);row.appendChild(d);box.appendChild(row);rm.appendChild(box)});
+const dates=Object.keys(data.records).sort().reverse().slice(0,10);
+document.getElementById("history").innerHTML=dates.length?dates.map(d=>`✅ ${d} 완료`).join("<br>"):"아직 완료 기록이 없어요.";
+}
+function editTask(i){const v=prompt("할 일 이름을 수정하세요",data.tasks[i]);if(v===null)return;const n=v.trim();if(!n)return;data.tasks[i]=n;save();renderParent();renderKid();toast("할 일을 수정했어요.")}
+document.getElementById("addTaskBtn").onclick=()=>{const v=document.getElementById("newTask").value.trim();if(!v)return;data.tasks.push(v);document.getElementById("newTask").value="";save();renderParent();renderKid();toast("할 일이 추가되었어요.")};
+document.getElementById("addRewardBtn").onclick=()=>{const n=document.getElementById("newReward").value.trim();const c=Number(document.getElementById("rewardCost").value);if(!n||c<1)return;data.rewards.push({name:n,cost:c});document.getElementById("newReward").value="";save();renderParent();renderKid();toast("보상이 추가되었어요.")};
+document.getElementById("resetAllBtn").onclick=()=>{if(!confirm("정말 모든 기록을 삭제할까요?"))return;localStorage.removeItem(KEY);location.reload()};
+document.getElementById("changePinBtn").onclick=()=>{const p=document.getElementById("newPin").value.trim();if(p.length<4)return toast("비밀번호는 4자리 이상으로 하세요.");data.pin=p;save();document.getElementById("newPin").value="";toast("비밀번호를 변경했어요.")};
+document.getElementById("loginBtn").onclick=()=>{if(document.getElementById("pinInput").value===data.pin){document.getElementById("loginCard").classList.add("hidden");document.getElementById("parentMenu").classList.remove("hidden");renderParent()}else toast("비밀번호가 틀렸어요.")};
+document.getElementById("tabKid").onclick=()=>{document.getElementById("tabKid").classList.add("active");document.getElementById("tabParent").classList.remove("active");document.getElementById("kidScreen").classList.remove("hidden");document.getElementById("parentScreen").classList.add("hidden");renderKid()};
+document.getElementById("tabParent").onclick=()=>{document.getElementById("tabParent").classList.add("active");document.getElementById("tabKid").classList.remove("active");document.getElementById("parentScreen").classList.remove("hidden");document.getElementById("kidScreen").classList.add("hidden")};
+renderKid();
+</script>
+</body>
+</html>
