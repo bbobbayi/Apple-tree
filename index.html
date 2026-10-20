@@ -7,13 +7,15 @@
 <section id="parent" class="hidden"><div id="login" class="card"><h2>부모 비밀번호</h2><input id="pin" type="password" inputmode="numeric" placeholder="처음 비밀번호 1234"><button id="loginBtn" class="main">로그인</button></div><div id="parentContent" class="hidden"><div class="card"><button id="logoutBtn" class="close">🔒 부모 화면 닫기</button><p class="muted">닫으면 아이가 설정을 바꿀 수 없어요. 아이 화면으로 이동하거나 화면을 닫아도 자동으로 잠겨요.</p></div><div class="card"><h2>오늘 승인 대기 <span id="pendingCount"></span></h2><div id="pending"></div></div><div class="card"><h2>오늘 취소 요청</h2><div id="cancels"></div></div><div class="card"><h2>오늘 승인된 할 일</h2><div id="approved"></div></div><div class="card"><h2>할 일 관리</h2><input id="newTask" placeholder="새 할 일"><button id="addTask" class="main">할 일 추가</button><div id="manageTasks"></div></div><div class="card"><h2>보상 관리</h2><input id="newReward" placeholder="새 보상"><input id="newCost" type="number" min="1" value="3" placeholder="필요한 사과"><button id="addReward" class="main">보상 추가</button><div id="manageRewards"></div></div><div class="card"><h2>성공 기록</h2><div id="history"></div></div><div class="card"><h2>설정</h2><input id="newPin" type="password" placeholder="새 비밀번호 (4자리 이상)"><button id="changePin">비밀번호 변경</button><button id="reset" class="danger">모든 데이터 초기화</button></div></div></section></div>
 <script>
 'use strict';
-const KEY='appleTreeAppV6';
+const KEY='appleTreeAppV7';
+const OLD_KEYS=['appleTreeAppV6','appleTreeAppV5','appleTreeAppV4'];
 const DEFAULT={tasks:[{id:'t1',name:'양치하기'},{id:'t2',name:'숙제하기'},{id:'t3',name:'장난감 정리'}],rewards:[{id:'r1',name:'아이스크림 먹기',cost:3},{id:'r2',name:'공원 놀러가기',cost:5}],days:{},badges:[],pin:'1234'};
 const $=id=>document.getElementById(id);
 const localDay=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const previousDay=key=>{let [y,m,d]=key.split('-').map(Number);return localDay(new Date(y,m-1,d-1))};
 let storageOK=true, loggedIn=false, tab='kid';
-function read(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){storageOK=false;return null}}
+function readKey(key){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){storageOK=false;return null}}
+function read(){return readKey(KEY)}
 function normalize(x){if(!x||typeof x!=='object')return structuredClone(DEFAULT);
 let tasks=(Array.isArray(x.tasks)?x.tasks:DEFAULT.tasks).map((t,i)=>typeof t==='string'?{id:'legacy-'+i,name:t}:t).filter(t=>t&&t.id&&typeof t.name==='string');
 let rewards=(Array.isArray(x.rewards)?x.rewards:DEFAULT.rewards).map((r,i)=>({...r,id:r.id||'legacy-r-'+i}));
@@ -21,6 +23,7 @@ let days=x.days&&typeof x.days==='object'?x.days:{};
 if(!x.days){const dates=new Set([...Object.keys(x.pending||{}),...Object.keys(x.approved||{}),...Object.keys(x.cancelRequests||{}),...Object.keys(x.records||{})]);for(const date of dates){const ids=a=>(Array.isArray(a)?a:[]).map(n=>tasks[n]?.id).filter(Boolean);days[date]={pending:ids(x.pending?.[date]),approved:ids(x.approved?.[date]),cancels:ids(x.cancelRequests?.[date]),complete:!!x.records?.[date]}}}
 return {tasks,rewards,days,badges:Array.isArray(x.badges)?x.badges:[],pin:String(x.pin||'1234'),legacyApples:Number(x.legacyApples??x.apples??0),legacyStreak:Number(x.legacyStreak??x.streak??0),legacyLast:x.legacyLast??x.lastSuccessDate??null};}
 let data=normalize(read());
+if(!read()&&storageOK){for(const oldKey of OLD_KEYS){const old=readKey(oldKey);if(old){data=normalize(old);try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}break}}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;return true}catch(e){storageOK=false;$('storageWarning').textContent='이 브라우저에서 저장이 차단됐어요. 크롬이나 삼성 인터넷의 일반 탭으로 열어주세요.';$('storageWarning').classList.remove('hidden');return false}}
 function day(key=localDay()){return data.days[key]||(data.days[key]={pending:[],approved:[],cancels:[],complete:false})}
 function freshId(){return String(Date.now())+'-'+Math.random().toString(36).slice(2)}
